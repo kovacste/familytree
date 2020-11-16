@@ -5,6 +5,10 @@ import VueRouter from 'vue-router';
 import { routes } from "./routes/routes";
 import { store } from "./store/store";
 
+import 'save-svg-as-png';
+console.log(this)
+
+
 Vue.use(VueRouter);
 const router = new VueRouter({ routes, mode: 'history' });
 

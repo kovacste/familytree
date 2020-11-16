@@ -1,6 +1,6 @@
 <template>
 
-    <v-layout style="height: 100%; margin-top:0; margin-bottom:0;">
+    <v-layout class="bg" style="height: 100%; margin-top:0; margin-bottom:0;">
 
             <v-row align="center" justify="center" style="height: 100%; margin-top:0; margin-bottom:0; padding-bottom: 0; padding-top:0;">
 
@@ -8,17 +8,27 @@
 
                     <v-card style="height: 100%; opacity: 0.93; margin-top:0; padding-bottom: 30px;">
 
-
                         <v-card-text class="pa-10">
 
                             <h1 style="margin-bottom:50px; margin-top: 30px;" class="text-center"> Regisztráció </h1>
 
                                 <v-text-field
-                                    label="Felhasználónév"
+                                    label="Vezetéknév"
                                     name="login"
                                     type="text"
-                                    v-model="username"
-                                    :rules="[v => !!v || 'Felhasználónév megadása kötelező!']"
+                                    v-model="lastname"
+                                    :rules="[v => !!v || 'Vezetéknév megadása kötelező!']"
+                                    prepend-inner-icon="person"
+                                    rounded
+                                    outlined
+                                />
+
+                                <v-text-field
+                                    label="Keresztnév"
+                                    name="login"
+                                    type="text"
+                                    v-model="firstname"
+                                    :rules="[v => !!v || 'Keresztnév megadása kötelező!']"
                                     prepend-inner-icon="person"
                                     rounded
                                     outlined
@@ -30,7 +40,19 @@
                                     type="text"
                                     v-model="email"
                                     :rules="[v => emailValid(email) || 'E-mail cím formátuma nem megfelelő!']"
-                                    prepend-inner-icon="alternate_email" rounded outlined
+                                    prepend-inner-icon="alternate_email"
+                                    rounded
+                                    outlined
+                                />
+
+                                <v-text-field
+                                    label="Születési hely"
+                                    name="birthplace"
+                                    type="text"
+                                    v-model="birthplace"
+                                    :rules="[v => !!v || 'Adja meg a születési helyét!!']"
+                                    rounded
+                                    outlined
                                 />
 
                                 <v-text-field
@@ -72,13 +94,15 @@
 </template>
 
 <script>
-import {registrationService} from "@/services/RegistrationService";
+import { registrationService } from '@/services/RegistrationService.js';
 
 export default {
     name: "Register",
     data() {
         return {
-            username: null,
+            firstname: null,
+            lastname: null,
+            birthplace: null,
             password: null,
             email: null,
             passwordAgain: null,
@@ -88,13 +112,27 @@ export default {
         formValid() {
             return this.password?.length > 5
                 && this.password === this.passwordAgain
-                && this.username?.length > 5
+                && this.firstname?.length > 5
+                && this.lastname?.length > 5
+                && this.birthplace?.length > 2
                 && this.emailValid(this.email)
         }
     },
     methods: {
         register() {
-            registrationService.register(this.username, this.password).then(response => {
+            registrationService.register(
+                {
+                    id: 1,
+                    email: this.email,
+                    password: this.password,
+                    firstName: this.firstname,
+                    lastName: this.lastname,
+                    birthDay: "1992-07-24T19:46:30.130Z",
+                    birthPlace: this.birthplace,
+                    imageUrl: 'https://avatarfiles.alphacoders.com/106/106923.jpg',
+                }
+            ).then(response => {
+                console.log(response.data)//TODO:: belépünk vagy mi?
                 this.$store.commit('setUser', {
                     username: response.data.loginNev,
                     name: response.data.nev,
@@ -111,5 +149,8 @@ export default {
 </script>
 
 <style scoped>
-
+.bg {
+    background: url("../../assets/2afdd997f68575669640c947104dee2a.jpg");
+    background-size: 100%;
+}
 </style>

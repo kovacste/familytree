@@ -1,26 +1,112 @@
 <template>
 
-    <v-layout>
+    <div>
 
-        <v-flex>
+        <div id="tree" ref="tree"></div>
 
-            <div id="tree" ref="tree"></div>
+        <v-layout>
 
-            <v-text-field label="Neve" v-model="nev" />
+            <v-flex md12 style="border: 1px solid grey;">
 
-            <v-select v-model="kinek" :items="nodes" item-text="name" item-value="id" label="Kinek" />
+                <v-layout row>
 
-            <v-select v-model="kije" :items="[
-                      {id: 1, name: 'Párja'},
-                      {id: 2, name: 'Gyereke'}
-                  ]" label="Kije" item-text="name" item-value="id"
-            />
+                    <v-flex md3>
 
-            <v-btn @click="add()">Hozzáadás </v-btn>
+                        <v-layout id="add-form" column wrap class="pa-5">
 
-        </v-flex>
+                            <h1 class="title">Családtag felvétele</h1>
 
-    </v-layout>
+                            <v-flex md4>
+
+                                <v-text-field
+                                    label="Neve"
+                                    v-model="nev"
+                                />
+
+                            </v-flex>
+
+                            <v-flex md4>
+
+                                <v-select
+                                    v-model="kije"
+                                    :items="[
+                                      {id: 1, name: 'Párja'},
+                                      {id: 2, name: 'Gyereke'}
+                                    ]"
+                                    label="Kije"
+                                    item-text="name"
+                                    item-value="id"
+                                />
+
+                            </v-flex>
+
+                            <v-flex md4>
+
+                                <v-select
+                                    v-model="anyja"
+                                    :items="nodes"
+                                    item-text="name"
+                                    item-value="id"
+                                    label="Kinek"
+                                />
+
+                            </v-flex>
+
+                            <v-flex md4>
+
+                                <v-select
+                                    v-model="apja"
+                                    :items="nodes"
+                                    item-text="name"
+                                    item-value="id"
+                                    label="Kinek"
+                                />
+
+                            </v-flex>
+
+
+                            <v-flex md4>
+
+                                <v-select
+                                    v-model="felesege"
+                                    :items="nodes"
+                                    item-text="name"
+                                    item-value="id"
+                                    label="Kinek"
+                                />
+
+                            </v-flex>
+
+                            <v-flex md4>
+                                <v-btn @click="add()">Hozzáadás </v-btn>
+                            </v-flex>
+
+                        </v-layout>
+
+                    </v-flex>
+
+                    <v-flex md3>
+
+                        <v-layout id="settings-form" column wrap class="pa-5">
+
+                            <h1 class="title">Műveletek</h1>
+
+                            <v-btn text @click="saveSvgToFile()"> Exportálás képként </v-btn>
+
+                            <v-btn text @click="saveToGraphViz()"> Exportálás gráfként </v-btn>
+
+
+                        </v-layout>
+
+                    </v-flex>
+
+                </v-layout>
+
+            </v-flex>
+
+        </v-layout>
+
+    </div>
 
 </template>
 
@@ -32,7 +118,11 @@ export default {
     data() {
         return {
             nev: null,
-            kinek: null,
+            felesege: null,
+            ferje: null,
+            anyja: null,
+            apja: null,
+            parja: null,
             chart: null,
             kije: null,
             nodes: [
@@ -58,11 +148,11 @@ export default {
         }
     },
     mounted() {
+        this.saveToGraphViz();
         this.oc(this.$refs.tree, this.nodes)
     },
     methods: {
         oc: function(domEl, x) {
-
             this.chart = new OrgChart(domEl, {
                 nodes: x,
                 nodeMouseClick: OrgChart.action.edit,
@@ -82,7 +172,6 @@ export default {
                 img: ''
             })
             this.oc(this.$refs.tree, this.nodes)
-
         },
         nextId() {
             let nextId = 0;
@@ -91,10 +180,99 @@ export default {
             })
             return nextId + 1;
         },
+        saveToGraphViz() {
+
+            const sameRankNodes = [];
+
+            const nameByPID = (pid) => {
+                return this.nodes.filter(node => node.id === pid)[0].name;
+            };
+
+            const nameByPPID = (ppid) => {
+                return this.nodes.filter(node => node.id === ppid)[0].name;
+            };
+
+            const directedEdge = (fromPoint, toPoint) => {
+                return '"' + fromPoint + '"' + ' -> ' + '"' + toPoint + '"' + '\n';
+            };
+
+            const undirectedEdge = (fromPoint, toPoint) => {
+                return '"' + fromPoint + '"' + ' -> ' + '"' + toPoint + '"' + '[dir=none]' + '\n';
+            };
+
+            let graphvizSource = 'digraph G {';
+            this.nodes.forEach(node => {
+
+                if(node.pid) {
+                    if(node.tags) {
+                        if(node.tags.includes('blue')) {
+                            graphvizSource += directedEdge(nameByPID(node.pid), node.name);
+                        }
+                        if(node.tags.includes('left-partner') || node.tags.includes('right-partner') || node.tags.includes('partner')) {
+                            graphvizSource += undirectedEdge(node.name, nameByPID(node.pid));
+                            sameRankNodes.push('{rank = same;"' + node.name + '";"'+ nameByPID(node.pid)+'"};\n');
+                        }
+                    } else {
+                        graphvizSource += directedEdge(nameByPID(node.pid), node.name);
+                    }
+                }
+                if(node.ppid) {
+                    if(node.tags) {
+                        if(node.tags.includes('blue')) {
+                            graphvizSource += directedEdge(nameByPPID(node.ppid), node.name);
+                        }
+                        if(node.tags.includes('left-partner') || node.tags.includes('right-partner') || node.tags.includes('partner')) {
+                            graphvizSource += undirectedEdge(node.name, nameByPPID(node.ppid));
+                            sameRankNodes.push('{rank = same;"' + node.name + '";"'+ nameByPPID(node.pid)+'"};\n');
+                        }
+                    } else {
+                        graphvizSource += directedEdge(nameByPPID(node.ppid), node.name);
+                    }
+                }
+            });
+            sameRankNodes.forEach(node => {
+                graphvizSource += node;
+            })
+            graphvizSource += '}';
+            console.log(graphvizSource);
+            return graphvizSource;
+        },
+        saveSvgToFile() {
+            const svg = document.getElementById("tree");
+            const serializer = new XMLSerializer();
+            let source = serializer.serializeToString(svg);
+            if(!source.match(/^<svg[^>]+xmlns="http:\/\/www\.w3\.org\/2000\/svg"/)){
+                source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+            }
+            if(!source.match(/^<svg[^>]+"http:\/\/www\.w3\.org\/1999\/xlink"/)){
+                source = source.replace(/^<svg/, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
+            }
+            source = '<?xml version="1.0" standalone="no"?>\r\n' + source;
+            const url = "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(source);
+            const downloadLink = document.createElement("a");
+            downloadLink.href = url;
+            downloadLink.download = "fmailytree.svg";
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        }
     }
 }
 </script>
 
 <style scoped>
 
+#tree {
+    background: white;
+    height: 60vh;
+}
+#add-form {
+    background: #f8f8f8;
+    border: 1px solid grey;
+}
+#settings-form {
+    background: #f8f8f8;
+    border: 1px solid grey;
+    height: 100%;
+}
 </style>

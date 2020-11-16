@@ -1,89 +1,94 @@
 <template>
-    <v-layout row>
 
-        <v-container class="fill-height" fluid>
+    <v-layout row class="bg" style="height: 100%; margin-top:0; margin-bottom:0;">
 
-            <v-row align="center" justify="center">
+        <v-row align="center" justify="center">
 
-                <v-col cols="12" sm="8" md="4">
+            <v-col cols="12" sm="8" md="4">
 
-                    <v-card  class="elevation-12 login" >
+                <v-card  class="elevation-12 login" >
 
-                        <v-toolbar color="primary" dark flat>
+                    <v-card-text class="pa-10">
 
-                            <v-toolbar-title> Bejelentkezés  </v-toolbar-title>
+                        <h1 style="margin-bottom:50px; margin-top: 30px;" class="text-center"> Bejelentkezés </h1>
 
-                        </v-toolbar>
-
-                        <v-card-text>
-
-                            <v-form>
-
-                                <v-text-field
-                                    label="Felhasználónév"
-                                    name="login"
-                                    type="text"
-                                    v-model="username"
-                                    :rules="[v => v.length > 5 || 'Felhasználónév legalább 5 karakter hosszú!']"
-                                />
+                        <v-text-field
+                                label="E-mail cím"
+                                name="login"
+                                type="text"
+                                v-model="email"
+                                rounded
+                                outlined
+                                :rules="[v => !!v || 'Felhasználónév legalább 5 karakter hosszú!']"
+                            />
 
 
-                                <v-text-field
-                                    id="password"
-                                    label="Jelszó"
-                                    name="password"
-                                    type="password"
-                                    v-model="password"
-                                    :rules="[v => v.length > 5 || 'Jelszó hossza legalább 5 karakter']"
-                                />
+                            <v-text-field
+                                id="password"
+                                label="Jelszó"
+                                name="password"
+                                type="password"
+                                rounded
+                                outlined
+                                v-model="password"
+                                :rules="[v => !!v || 'Jelszó hossza legalább 5 karakter']"
+                            />
 
-                            </v-form>
+                        <div class="text-center pa-5 ma-5">
 
-                        </v-card-text>
 
-                        <v-card-actions>
+                            <v-btn @click="login()"
+                                   rounded
+                                   outlined
+                                   x-large
+                                   :disabled="!email || !password"
+                                   color="primary">Bejelentkezés
+                            </v-btn>
+                        </div>
 
-                            <v-spacer />
+                    </v-card-text>
 
-                            <v-btn @click="login()" color="primary">Bejelentkezés  </v-btn>
+                    <v-card-actions>
 
-                            <v-btn @click="toRegistration()" color="primary">Regisztráció  </v-btn>
+                        <v-spacer />
 
-                        </v-card-actions>
 
-                    </v-card>
+                    </v-card-actions>
 
-                </v-col>
+                </v-card>
 
-            </v-row>
+            </v-col>
 
-        </v-container>
+        </v-row>
 
     </v-layout>
 
 </template>
 
 <script>
-import {loginService} from "@/services/LoginService";
+import { loginService } from "@/services/LoginService";
 
 export default {
     name: "Login",
     data() {
         return {
-            username: null,
+            email: null,
             password: null,
         }
     },
 
     methods: {
         login() {
-            loginService.login(this.username, this.password).then(response => {
+            loginService.login({
+                email: this.email,
+                password: this.password
+            }).then(response => {
                 this.$store.commit('setUser', {
-                    username: response.data.loginNev,
+                    email: response.data.loginNev,
                     name: response.data.nev,
                     id: response.data.id
                 });
-                this.$router.push('/')
+                this.$router.push('/familytree')
             })
         },
         toRegistration() {
@@ -96,5 +101,9 @@ export default {
 <style scoped>
 .login {
     opacity: 0.5;
+}
+.bg {
+    background: url("../../assets/2afdd997f68575669640c947104dee2a.jpg");
+    background-size: 100%;
 }
 </style>

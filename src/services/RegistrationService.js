@@ -2,11 +2,28 @@ import { Service } from "./Service";
 
 class RegistrationService extends Service {
 
-    register(username, password) {
-        return this.get('', {
-            loginName: username,
-            password: password
-        })
+    register(
+        {
+            id,
+            email,
+            password,
+            firstName,
+            lastName,
+            birthDay,
+            birthPlace,
+            imageUrl,
+        }
+        ) {
+        return this.post('api/User/SetUser', {
+            id,
+            email,
+            password,
+            firstName,
+            lastName,
+            birthDay,
+            birthPlace,
+            imageUrl,
+        });
     }
 }
 
