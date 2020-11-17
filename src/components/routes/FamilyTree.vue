@@ -8,7 +8,7 @@
 
             <v-flex md12 style="border: 1px solid grey;">
 
-                <v-layout row>
+                <v-layout row justify-space-between>
 
                     <v-flex md3>
 
@@ -19,8 +19,17 @@
                             <v-flex md4>
 
                                 <v-text-field
-                                    label="Neve"
-                                    v-model="nev"
+                                    label="Vezetéknév"
+                                    v-model="firstName"
+                                />
+
+                            </v-flex>
+
+                            <v-flex md4>
+
+                                <v-text-field
+                                    label="Keresztnév"
+                                    v-model="lastName"
                                 />
 
                             </v-flex>
@@ -40,32 +49,32 @@
 
                             </v-flex>
 
-                            <v-flex md4>
+                            <v-flex md4 v-if="kije === 2">
 
                                 <v-select
                                     v-model="anyja"
                                     :items="nodes"
                                     item-text="name"
                                     item-value="id"
-                                    label="Kinek"
+                                    label="Anyja"
                                 />
 
                             </v-flex>
 
-                            <v-flex md4>
+                            <v-flex md4 v-if="kije === 2">
 
                                 <v-select
                                     v-model="apja"
                                     :items="nodes"
                                     item-text="name"
                                     item-value="id"
-                                    label="Kinek"
+                                    label="Apja"
                                 />
 
                             </v-flex>
 
 
-                            <v-flex md4>
+                            <v-flex md4 v-if="kije === 1">
 
                                 <v-select
                                     v-model="felesege"
@@ -100,6 +109,18 @@
 
                     </v-flex>
 
+                    <v-flex md1>
+
+                         <span class="logout-text-button" @click="logout()">
+
+                          <v-icon> mdi-logout </v-icon>
+
+                          Kijelentkezés
+
+                        </span>
+
+                    </v-flex>
+
                 </v-layout>
 
             </v-flex>
@@ -112,17 +133,17 @@
 
 <script>
 import OrgChart from "@balkangraph/orgchart.js";
+import {relationService} from "@/services/RelationService";
 
 export default {
     name: "FamilyTree",
     data() {
         return {
-            nev: null,
+            firstName: null,
+            lastName: null,
             felesege: null,
-            ferje: null,
             anyja: null,
             apja: null,
-            parja: null,
             chart: null,
             kije: null,
             nodes: [
@@ -148,10 +169,43 @@ export default {
         }
     },
     mounted() {
-        this.saveToGraphViz();
-        this.oc(this.$refs.tree, this.nodes)
+
+        if(localStorage.getItem('id') && this.$store.getters.user == null) {
+            this.$store.commit('setUser', {
+                email: localStorage.getItem('email'),
+                id: localStorage.getItem('id'),
+                firstName: localStorage.getItem('firstName'),
+                lastName: localStorage.getItem('lastName'),
+                birthDay: localStorage.getItem('birthDay'),
+                birthPlace: localStorage.getItem('birthPlace'),
+                imageUrl: localStorage.getItem('imageUrl'),
+            });
+        }
+
+        relationService.getUserRelations(this.$store.getters.user.id).then(response => {
+            console.log(response.data)
+
+            if(response.data.length === 0) {
+                this.nodes = [];
+                this.nodes.push({
+                    id: this.$store.getters.user.id,
+                    tags: ['blue'],
+                    name: this.$store.getters.user.firstName + ' ' + this.$store.getters.user.lastName,
+                    img: this.$store.getters.user.imageUrl,
+                })
+            }
+
+            this.saveToGraphViz();
+            this.oc(this.$refs.tree, this.nodes)
+        })
+
     },
     methods: {
+        logout() {
+            this.$store.commit('logOutUser');
+            localStorage.clear();
+            this.$router.push('/login');
+        },
         oc: function(domEl, x) {
             this.chart = new OrgChart(domEl, {
                 nodes: x,
@@ -164,21 +218,56 @@ export default {
             });
         },
         add() {
-            this.nodes.push({
+
+            const parentFix = (node) => {
+                let newPid = node.pid;
+                let newPpid = node.ppid;
+
+                if(newPid && newPpid) {
+                    let parentTags = this.nodes.filter(node => {
+                        console.log(node);
+                        return node.id === newPid;
+                    })[0].tags;
+
+                    if(parentTags.includes('partner') || parentTags.includes('left-partner') || parentTags.includes('right-partner')) {
+                        let tmp = newPid;
+                        newPid = newPpid;
+                        newPpid = tmp;
+                    }
+                }
+                return {
+                    id: node.id,
+                    name: node.name,
+                    pid: newPid,
+                    ppid: newPpid,
+                    tags: node.tags,
+                    img: ''
+                }
+            };
+
+            this.nodes.push(parentFix({
                 id: this.nextId(),
-                name: this.nev,
-                pid: this.kinek,
-                tags: this.kije === 1 ? ['partner'] : 'blue',
+                name: this.firstName + ' ' + this.lastName,
+                pid: this.kije === 1 ? this.felesege : this.apja,
+                ppid: this.kije === 1 ? null : this.anyja,
+                tags: this.kije === 1 ? ['partner'] : ['blue'],
                 img: ''
-            })
+            }))
+            console.log(this.nodes)
             this.oc(this.$refs.tree, this.nodes)
+            this.firstName = '';
+            this.lastName = '';
+            this.kije = null;
+            this.felesege = null;
+            this.anyja = null;
+            this.apja = null;
         },
         nextId() {
             let nextId = 0;
             this.nodes.forEach(node => {
-                if(node.id > nextId) nextId = node.id
-            })
-            return nextId + 1;
+                if(parseInt(node.id) > parseInt(nextId)) nextId = parseInt(node.id)
+            });
+            return '' + (parseInt(nextId) + 1);
         },
         saveToGraphViz() {
 

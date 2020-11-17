@@ -67,9 +67,11 @@
 
 <script>
 import { loginService } from "@/services/LoginService";
+import {toast} from "@/mixins/toast";
 
 export default {
     name: "Login",
+    mixins: [toast],
     data() {
         return {
             email: null,
@@ -82,13 +84,34 @@ export default {
             loginService.login({
                 email: this.email,
                 password: this.password
-            }).then(response => {
+            }).then((response) => {
+
+                localStorage.setItem('email', response.data.email);
+                localStorage.setItem('id', response.data.id);
+                localStorage.setItem('firstName', response.data.firstName);
+                localStorage.setItem('lastName', response.data.lastName);
+                localStorage.setItem('birthDay', response.data.birthDay);
+                localStorage.setItem('birthPlace', response.data.birthPlace);
+                localStorage.setItem('imageUrl', response.data.imageUrl);
+
                 this.$store.commit('setUser', {
-                    email: response.data.loginNev,
-                    name: response.data.nev,
-                    id: response.data.id
+                    email: this.email,
+                    id: response.data.id,
+                    firstName: response.data.firstName,
+                    lastName: response.data.lastName,
+                    birthDay: response.data.birthDay,
+                    birthPlace: response.data.birthPlace,
+                    imageUrl: response.data.imageUrl,
                 });
+
                 this.$router.push('/familytree')
+            }).catch((error) => {
+                if(error.response.data === 'NOT_AUTHENTICATED') {
+                    this.saveFail('Hibás felhasználónév vagy jelszó!');
+                } else {
+                    this.saveFail('Bejelentkezés sikertelen!');
+                }
+
             })
         },
         toRegistration() {

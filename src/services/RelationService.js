@@ -59,4 +59,4 @@ class RelationService extends Service {
     }
 }
 
-export const registrationService = new RelationService('/api/');
+export const relationService = new RelationService('/api/');
