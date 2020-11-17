@@ -22,7 +22,6 @@
                                 :rules="[v => !!v || 'Felhasználónév legalább 5 karakter hosszú!']"
                             />
 
-
                             <v-text-field
                                 id="password"
                                 label="Jelszó"
@@ -44,6 +43,8 @@
                                    :disabled="!email || !password"
                                    color="primary">Bejelentkezés
                             </v-btn>
+                            <br>
+                            <span @click="toRegistration()" style="cursor:pointer;"><u>Regisztráció</u></span>
                         </div>
 
                     </v-card-text>
@@ -51,7 +52,6 @@
                     <v-card-actions>
 
                         <v-spacer />
-
 
                     </v-card-actions>
 

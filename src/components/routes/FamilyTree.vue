@@ -4,11 +4,11 @@
 
         <div id="tree" ref="tree"></div>
 
-        <v-layout>
+        <v-layout style="background: #dcdcdc">
 
-            <v-flex md12 style="border: 1px solid grey;">
+            <v-flex md12>
 
-                <v-layout row justify-space-between>
+                <v-layout row>
 
                     <v-flex md3>
 
@@ -86,6 +86,36 @@
 
                             </v-flex>
 
+
+                            <v-flex md4>
+
+                                <v-text-field
+                                    label="Kép"
+                                    v-model="imageUrl"
+                                />
+
+                            </v-flex>
+
+
+                            <v-flex md4>
+
+                                <v-text-field
+                                    label="Születési idő"
+                                    v-model="birthDay"
+                                />
+
+                            </v-flex>
+
+
+                            <v-flex md4>
+
+                                <v-text-field
+                                    label="Születsi hely"
+                                    v-model="birthPlace"
+                                />
+
+                            </v-flex>
+
                             <v-flex md4>
                                 <v-btn @click="add()">Hozzáadás </v-btn>
                             </v-flex>
@@ -111,9 +141,9 @@
 
                     <v-flex md1>
 
-                         <span class="logout-text-button" @click="logout()">
+                         <span @click="logout" class="logout-text-button">
 
-                          <v-icon> mdi-logout </v-icon>
+                          <v-icon > mdi-logout </v-icon>
 
                           Kijelentkezés
 
@@ -142,6 +172,9 @@ export default {
             firstName: null,
             lastName: null,
             felesege: null,
+            imageUrl: null,
+            birthDay: null,
+            birthPlace: null,
             anyja: null,
             apja: null,
             chart: null,
@@ -183,8 +216,6 @@ export default {
         }
 
         relationService.getUserRelations(this.$store.getters.user.id).then(response => {
-            console.log(response.data)
-
             if(response.data.length === 0) {
                 this.nodes = [];
                 this.nodes.push({
@@ -194,8 +225,6 @@ export default {
                     img: this.$store.getters.user.imageUrl,
                 })
             }
-
-            this.saveToGraphViz();
             this.oc(this.$refs.tree, this.nodes)
         })
 
@@ -241,19 +270,45 @@ export default {
                     pid: newPid,
                     ppid: newPpid,
                     tags: node.tags,
-                    img: ''
+                    img: node.img,
                 }
             };
 
-            this.nodes.push(parentFix({
+            const newNode = parentFix({
                 id: this.nextId(),
                 name: this.firstName + ' ' + this.lastName,
                 pid: this.kije === 1 ? this.felesege : this.apja,
                 ppid: this.kije === 1 ? null : this.anyja,
                 tags: this.kije === 1 ? ['partner'] : ['blue'],
-                img: ''
-            }))
-            console.log(this.nodes)
+                img: this.imageUrl,
+            });
+
+            /*const firstParent = this.nodes.filter(node => node.id === newNode.pid)[0];
+            const secondParent = this.nodes.filter(node => node.id === newNode.ppid)[0];
+
+            relationService.setUserRelation({
+                id: 0,
+                firstUser: {
+                    id: ,
+                    firstName: ,
+                    lastName: ,
+                    birthDay: ,
+                    birthPlace: ,
+                    imageUrl:,
+                },
+                secondUser: {
+                    id: ,
+                    firstName: ,
+                    lastName: ,
+                    birthDay: ,
+                    birthPlace: ,
+                    imageUrl: ,
+                },
+                relationTypeId:,
+            })*/
+
+            this.nodes.push(newNode)
+
             this.oc(this.$refs.tree, this.nodes)
             this.firstName = '';
             this.lastName = '';
@@ -261,6 +316,7 @@ export default {
             this.felesege = null;
             this.anyja = null;
             this.apja = null;
+            this.imageUrl = '';
         },
         nextId() {
             let nextId = 0;
@@ -323,8 +379,12 @@ export default {
                 graphvizSource += node;
             })
             graphvizSource += '}';
-            console.log(graphvizSource);
-            return graphvizSource;
+
+            let link = document.createElement('a');
+            const file = new Blob([graphvizSource], {type: 'txt'});
+            link.href = URL.createObjectURL(file)
+            link.download = 'familytree.txt';
+            link.click();
         },
         saveSvgToFile() {
             const svg = document.getElementById("tree");
@@ -351,17 +411,22 @@ export default {
 
 <style scoped>
 
+.logout-text-button  {
+    position: absolute;
+    bottom: 20%;
+    right: 5%;
+    cursor: pointer;
+}
+
 #tree {
     background: white;
     height: 60vh;
 }
 #add-form {
     background: #f8f8f8;
-    border: 1px solid grey;
 }
 #settings-form {
     background: #f8f8f8;
-    border: 1px solid grey;
     height: 100%;
 }
 </style>

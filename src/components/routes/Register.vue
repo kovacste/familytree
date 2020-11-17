@@ -56,6 +56,16 @@
                                 />
 
                                 <v-text-field
+                                    label="Születési idő"
+                                    name="birthplace"
+                                    type="text"
+                                    v-model="birthday"
+                                    :rules="[v => !!v || 'Adja meg a születési helyét!!']"
+                                    rounded
+                                    outlined
+                                />
+
+                                <v-text-field
                                     id="password"
                                     label="Jelszó"
                                     name="password"
@@ -78,6 +88,9 @@
                             <div class="text-center pa-5 ma-5">
 
                                 <v-btn x-large outlined rounded :disabled="!formValid" @click="register()" color="primary">Regisztráció  </v-btn>
+
+                                <br>
+                                <span style="cursor:pointer;" @click="toLogin()"><u>Bejelentkezés</u></span>
 
                             </div>
 
@@ -103,6 +116,7 @@ export default {
             firstname: null,
             lastname: null,
             birthplace: null,
+            birthday: "1992-07-24T19:46:30.130Z",
             password: null,
             email: null,
             passwordAgain: null,
@@ -119,6 +133,9 @@ export default {
         }
     },
     methods: {
+        toLogin() {
+            this.$router.push('/login')
+        },
         register() {
             registrationService.register(
                 {
@@ -127,18 +144,14 @@ export default {
                     password: this.password,
                     firstName: this.firstname,
                     lastName: this.lastname,
-                    birthDay: "1992-07-24T19:46:30.130Z",
+                    birthDay: this.birthday,
                     birthPlace: this.birthplace,
                     imageUrl: 'https://avatarfiles.alphacoders.com/106/106923.jpg',
                 }
-            ).then(response => {
-                console.log(response.data)//TODO:: belépünk vagy mi?
-                this.$store.commit('setUser', {
-                    username: response.data.loginNev,
-                    name: response.data.nev,
-                    id: response.data.id
-                });
-                this.$router.push('/')
+            ).then(() => {
+                this.$router.push('/login')
+            }).catch(error => {
+                console.log(error)
             })
         },
         emailValid(email) {
