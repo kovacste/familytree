@@ -139,7 +139,7 @@ export default {
         register() {
             registrationService.register(
                 {
-                    id: 1,
+                    id: 0,
                     email: this.email,
                     password: this.password,
                     firstName: this.firstname,

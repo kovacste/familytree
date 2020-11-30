@@ -4,11 +4,11 @@
 
         <div id="tree" ref="tree"></div>
 
-        <v-layout style="background: #dcdcdc">
+        <v-layout id="menu"  style="background: #f8f8f8">
 
             <v-flex md12>
 
-                <v-layout row>
+                <v-layout v-if="!hidden" row>
 
                     <v-flex md3>
 
@@ -40,7 +40,8 @@
                                     v-model="kije"
                                     :items="[
                                       {id: 1, name: 'Párja'},
-                                      {id: 2, name: 'Gyereke'}
+                                      {id: 2, name: 'Gyereke'},
+                                      {id: 3, name: 'Szülője'},
                                     ]"
                                     label="Kije"
                                     item-text="name"
@@ -74,7 +75,7 @@
                             </v-flex>
 
 
-                            <v-flex md4 v-if="kije === 1">
+                            <v-flex md4 v-if="kije === 1 || kije === 3">
 
                                 <v-select
                                     v-model="felesege"
@@ -134,24 +135,30 @@
 
                             <v-btn text @click="saveToGraphViz()"> Exportálás gráfként </v-btn>
 
-
                         </v-layout>
 
                     </v-flex>
 
-                    <v-flex md1>
-
-                         <span @click="logout" class="logout-text-button">
-
-                          <v-icon > mdi-logout </v-icon>
-
-                          Kijelentkezés
-
-                        </span>
-
-                    </v-flex>
-
                 </v-layout>
+
+            </v-flex>
+
+            <v-flex md1 style="cursor:pointer;">
+
+                <v-icon v-if="hidden" @click="hidden = !hidden"> expand_less </v-icon>
+                <v-icon v-if="!hidden" @click="hidden = !hidden"> expand_more </v-icon>
+
+            </v-flex>
+
+            <v-flex md1>
+
+                 <span @click="logout" class="logout-text-button">
+
+                  <v-icon > mdi-logout </v-icon>
+
+                  Kijelentkezés
+
+                </span>
 
             </v-flex>
 
@@ -169,6 +176,7 @@ export default {
     name: "FamilyTree",
     data() {
         return {
+            hidden: true,
             firstName: null,
             lastName: null,
             felesege: null,
@@ -180,11 +188,11 @@ export default {
             chart: null,
             kije: null,
             nodes: [
-                { id: 1, tags: ["blue"], name: "King George VI", img: "https://cdn.balkan.app/shared/f1.png"},
-                { id: 2, pid: 1, tags: ["partner"], name: "Queen Elizabeth", title: "The Queen Mother", img: "https://cdn.balkan.app/shared/f2.png" },
-                { id: 3, pid: 1, tags: ["blue"],  ppid: 2, name: "Queen Elizabeth II", img: "https://cdn.balkan.app/shared/f5.png"},
-                { id: 4, pid: 3, tags: ["left-partner"], name: "Prince Philip", title: "Duke of Edinburgh", img: "https://cdn.balkan.app/shared/f3.png"},
-                { id: 5, pid: 1, ppid: 2, name: "Princess Margaret", img: "https://cdn.balkan.app/shared/f6.png"},
+                { firstName: 'Name', lastName: 'NAMME', birthPlace: 'HELY', birthDay: 'IDO',  id: 1, pid: 0, tags: ["blue"], name: "King George VI", img: "https://cdn.balkan.app/shared/f1.png"},
+                { firstName: 'Name', lastName: 'NAMME', birthPlace: 'HELY', birthDay: 'IDO',  id: 2, pid: 1, tags: ["partner"], name: "Queen Elizabeth", title: "The Queen Mother", img: "https://cdn.balkan.app/shared/f2.png" },
+                { firstName: 'Name', lastName: 'NAMME', birthPlace: 'HELY', birthDay: 'IDO',  id: 3, pid: 1, tags: ["blue"],  ppid: 2, name: "Queen Elizabeth II", img: "https://cdn.balkan.app/shared/f5.png"},
+                { firstName: 'Name', lastName: 'NAMME', birthPlace: 'HELY', birthDay: 'IDO',  id: 4, pid: 3, tags: ["left-partner"], name: "Prince Philip", title: "Duke of Edinburgh", img: "https://cdn.balkan.app/shared/f3.png"},
+                /*{ id: 5, pid: 1, ppid: 2, name: "Princess Margaret", img: "https://cdn.balkan.app/shared/f6.png"},
                 { id: 6, pid: 3,tags: ["blue"], ppid: 4, name: "Charles", title: "Prince of Wales", img: "https://cdn.balkan.app/shared/f8.png"},
                 { id: 7, pid: 6, tags: ["partner"] , name: "Diana", title: "Princess of Wales", img: "https://cdn.balkan.app/shared/f9.png"},
                 { id: 8, pid: 6, tags: ["partner"], name: "Camila", title: "Duchess of Cornwall", img: "https://cdn.balkan.app/shared/f7.png" },
@@ -197,11 +205,15 @@ export default {
                 { id: 15, pid: 13, tags: ["right-partner"], name: "Meghan Markle", img: "https://cdn.balkan.app/shared/f16.png"},
                 { id: 16, pid: 12, ppid: 14, tags: ["blue"], name: "Prince George of Cambridge", img: "https://cdn.balkan.app/shared/f17.png"},
                 { id: 17, pid: 12, ppid: 14, tags: ["blue"], name: "Prince Charlotte of Cambridge", img: "https://cdn.balkan.app/shared/f18.png"},
-                { id: 18, pid: 12, ppid: 14, tags: ["blue"], name: "Prince Louis of Cambridge", img: "https://cdn.balkan.app/shared/f19.png"}
+                { id: 18, pid: 12, ppid: 14, tags: ["blue"], name: "Prince Louis of Cambridge", img: "https://cdn.balkan.app/shared/f19.png"}*/
             ]
         }
     },
     mounted() {
+
+        relationService.getRaltionTypes().then(response => {
+            console.log(response);
+        })
 
         if(localStorage.getItem('id') && this.$store.getters.user == null) {
             this.$store.commit('setUser', {
@@ -216,14 +228,20 @@ export default {
         }
 
         relationService.getUserRelations(this.$store.getters.user.id).then(response => {
+            console.log(response)
             if(response.data.length === 0) {
                 this.nodes = [];
                 this.nodes.push({
                     id: this.$store.getters.user.id,
                     tags: ['blue'],
                     name: this.$store.getters.user.firstName + ' ' + this.$store.getters.user.lastName,
+                    birthDayAndPlace: this.$store.getters.user.birthDay + ' ' + this.$store.getters.user.birthPlace,
                     img: this.$store.getters.user.imageUrl,
-                })
+                    firstName: this.$store.getters.user.firstName,
+                    lastName: this.$store.getters.user.lastName,
+                    birthDay: this.$store.getters.user.birthDay,
+                    birthPlace: this.$store.getters.user.birthPlace,
+                });
             }
             this.oc(this.$refs.tree, this.nodes)
         })
@@ -241,17 +259,15 @@ export default {
                 nodeMouseClick: OrgChart.action.edit,
                 nodeBinding: {
                     field_0: "name",
-                    field_1: "title",
+                    field_1: "birthDayAndPlace",
                     img_0: "img"
                 }
             });
         },
         add() {
-
             const parentFix = (node) => {
                 let newPid = node.pid;
                 let newPpid = node.ppid;
-
                 if(newPid && newPpid) {
                     let parentTags = this.nodes.filter(node => {
                         console.log(node);
@@ -273,39 +289,99 @@ export default {
                     img: node.img,
                 }
             };
+            let newNode = null;
+            if(this.kije !== 3) {
+                newNode = parentFix({
+                    id: this.nextId(),
+                    name: this.firstName + ' ' + this.lastName,
+                    pid: this.kije === 1 ? this.felesege : this.apja,
+                    ppid: this.kije === 1 ? null : this.anyja,
+                    tags: this.kije === 1 ? ['partner'] : ['blue'],
+                    img: this.imageUrl,
+                });
 
-            const newNode = parentFix({
-                id: this.nextId(),
-                name: this.firstName + ' ' + this.lastName,
-                pid: this.kije === 1 ? this.felesege : this.apja,
-                ppid: this.kije === 1 ? null : this.anyja,
-                tags: this.kije === 1 ? ['partner'] : ['blue'],
-                img: this.imageUrl,
-            });
+                if(this.kije === 1) {
+                    let i = 0;
+                    for(i = 0; i < this.nodes.length; i++) {
+                        if(this.nodes[i].pid === this.felesege) {
+                            this.nodes[i].ppid = newNode.id;
+                            break;
+                        }
+                    }
+                }
 
-            /*const firstParent = this.nodes.filter(node => node.id === newNode.pid)[0];
-            const secondParent = this.nodes.filter(node => node.id === newNode.ppid)[0];
+            } else {
+                newNode = {
+                    id: this.nextId(),
+                    name: this.firstName + ' ' + this.lastName,
+                    pid: null,
+                    ppid: null,
+                    tags: null,
+                    img: this.imageUrl,
+                };
+                //meg kell keresni hogy kinek amit megad
+                let i = 0;
+                for(i = 0; i < this.nodes.length; i++) {
+                    if(this.nodes[i].id === this.felesege) {
+                        this.nodes[i].pid = newNode.id;
+                        break;
+                    }
+                }
+            }
+
+            //const relationTypeId = this.kije === 1 ? 1 : 2;
+            const relationTypeId = 1;
+
+            const firstParent = this.nodes.filter(node => node.id === newNode.pid)[0];
 
             relationService.setUserRelation({
                 id: 0,
                 firstUser: {
-                    id: ,
-                    firstName: ,
-                    lastName: ,
-                    birthDay: ,
-                    birthPlace: ,
-                    imageUrl:,
+                    id: 0,
+                    firstName: this.firstName,
+                    lastName: this.lastName,
+                    birthDay: this.birthDay,
+                    birthPlace: this.birthPlace,
+                    imageUrl: this.imageUrl,
                 },
                 secondUser: {
-                    id: ,
-                    firstName: ,
-                    lastName: ,
-                    birthDay: ,
-                    birthPlace: ,
-                    imageUrl: ,
+                    id: firstParent.id,
+                    firstName: firstParent.firstName,
+                    lastName: firstParent.lastName,
+                    birthDay: firstParent.birthDay,
+                    birthPlace: firstParent.birthPlace,
+                    imageUrl: firstParent.img,
                 },
-                relationTypeId:,
-            })*/
+                relationTypeId: relationTypeId,
+            });
+
+            if(relationTypeId !== 1) {
+                const secondParent = this.nodes.filter(node => node.id === newNode.ppid)[0];
+                relationService.setUserRelation({
+                    id: 0,
+                    firstUser: {
+                        id: newNode.id,
+                        firstName: this.firstName,
+                        lastName: this.lastName,
+                        birthDay: this.birthDay,
+                        birthPlace: this.birthPlace,
+                        imageUrl: this.imageUrl,
+                    },
+                    secondUser: {
+                        id: secondParent.id,
+                        firstName: secondParent.firstName,
+                        lastName: secondParent.lastName,
+                        birthDay: secondParent.birthDay,
+                        birthPlace: secondParent.birthPlace,
+                        imageUrl: secondParent.img,
+                    },
+                    relationTypeId: relationTypeId,
+                });
+            }
+
+            newNode.birthDayAndPlace = this.birthDay + ' ' + this.birthPlace;
+            newNode.birthDay = this.birthDay;
+            newNode.birthPlace = this.birthPlace;
 
             this.nodes.push(newNode)
 
@@ -411,10 +487,17 @@ export default {
 
 <style scoped>
 
-.logout-text-button  {
+#menu {
     position: absolute;
-    bottom: 20%;
-    right: 5%;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+.visible {
+    transition: height 0.3s;
+}
+
+.logout-text-button  {
     cursor: pointer;
 }
 
@@ -428,5 +511,9 @@ export default {
 #settings-form {
     background: #f8f8f8;
     height: 100%;
+}
+.hidden {
+    transition: height 0.3s;
+    height: 50px;
 }
 </style>

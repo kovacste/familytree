@@ -7,7 +7,6 @@ import { store } from "./store/store";
 import Toasted from 'vue-toasted';
 
 import 'save-svg-as-png';
-console.log(this)
 
 Vue.use(Toasted);
 
@@ -17,9 +16,8 @@ const router = new VueRouter({ routes, mode: 'history' });
 router.beforeEach((to, from, next) => {
   const loggedIn = store.getters.user !== null || localStorage.getItem('email');
 
-  console.log(loggedIn)
-
   if(loggedIn && (to.name === 'login' || to.name === 'registration')) {
+
     next('/home');
   } else if(!loggedIn && to.name !== 'login' && to.name !== 'registration') {
     next('/login');

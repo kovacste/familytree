@@ -9,6 +9,7 @@ class RelationService extends Service {
     }
 
     setUserRelation(relation){
+        console.log(relation)
         return this.post('api/User/SetUserRelation', {
             id: relation.id,
             firstUser: {
