@@ -323,18 +323,22 @@ export default {
                 let i = 0;
                 for(i = 0; i < this.nodes.length; i++) {
                     if(this.nodes[i].id === this.felesege) {
-                        this.nodes[i].pid = newNode.id;
+                        if(!this.nodes[i].pid) {
+                            this.nodes[i].pid = newNode.id;
+                        } else {
+                            this.nodes[i].ppid = newNode.id;
+                        }
                         break;
                     }
                 }
             }
 
             //const relationTypeId = this.kije === 1 ? 1 : 2;
-            const relationTypeId = 1;
+            //const relationTypeId = 1;
 
-            const firstParent = this.nodes.filter(node => node.id === newNode.pid)[0];
+            //const firstParent = this.nodes.filter(node => node.id === newNode.pid)[0];
 
-            relationService.setUserRelation({
+            /*relationService.setUserRelation({
                 id: 0,
                 firstUser: {
                     id: 0,
@@ -353,9 +357,10 @@ export default {
                     imageUrl: firstParent.img,
                 },
                 relationTypeId: relationTypeId,
-            });
+            });*/
 
-            if(relationTypeId !== 1) {
+
+          /*  if(relationTypeId !== 1) {
                 const secondParent = this.nodes.filter(node => node.id === newNode.ppid)[0];
                 relationService.setUserRelation({
                     id: 0,
@@ -377,7 +382,7 @@ export default {
                     },
                     relationTypeId: relationTypeId,
                 });
-            }
+            }*/
 
             newNode.birthDayAndPlace = this.birthDay + ' ' + this.birthPlace;
             newNode.birthDay = this.birthDay;
