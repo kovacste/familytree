@@ -147,6 +147,16 @@
 
                     </v-flex>
 
+                    <v-flex md3>
+                        <h1 class="title">Kép feltöltése </h1>
+                        <div>
+                            <img width="150" :src="image" class="uploading-image" />
+                            <input type="file" accept="image/jpeg" @change="imageLoaded">
+                            <v-btn v-if="image" @click="upload"> Feltöltés </v-btn>
+                            <v-btn v-if="image" @click="image = null; imageFile = null;"> Mégse  </v-btn>
+                        </div>
+                    </v-flex>
+
                 </v-layout>
 
             </v-flex>
@@ -179,6 +189,7 @@
 <script>
 import OrgChart from "@balkangraph/orgchart.js";
 import {relationService} from "@/services/RelationService";
+import axios from 'axios';
 
 export const SZULO = 1;
 export const GYERMEK = 3;
@@ -189,6 +200,8 @@ export default {
     data() {
         return {
             hidden: true,
+            image: null,
+            imageFile: null,
             toDelete: null,
             firstName: null,
             lastName: null,
@@ -336,6 +349,31 @@ export default {
 
     },
     methods: {
+        imageLoaded(e) {
+            const image = e.target.files[0];
+            this.imageFile = image;
+            const reader = new FileReader();
+            reader.readAsDataURL(image);
+            reader.onload = e =>{
+                this.image = e.target.result;
+            };
+        },
+        upload() {
+            let formData = new FormData();
+            formData.append('file', this.imageFile);
+
+            axios.post(
+                '/uploadService',
+                formData, {
+                    headers: {
+                        'Content-Type': this.imageFile
+                    }
+                }
+            ).then(response => {
+                    console.log(response);
+                }
+            );
+        },
         nodeFromRelation(relation, tags, pid, ppid) {
            return {
                id: relation.id,
