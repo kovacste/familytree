@@ -39,9 +39,9 @@
                                 <v-select
                                     v-model="kije"
                                     :items="[
-                                      {id: 1, name: 'Párja'},
-                                      {id: 2, name: 'Gyereke'},
-                                      {id: 3, name: 'Szülője'},
+                                      {id: 4, name: 'Párja'},
+                                      {id: 3, name: 'Gyereke'},
+                                      {id: 1, name: 'Szülője'},
                                     ]"
                                     label="Kije"
                                     item-text="name"
@@ -50,7 +50,7 @@
 
                             </v-flex>
 
-                            <v-flex md4 v-if="kije === 2">
+                            <v-flex md4 v-if="kije === 3">
 
                                 <v-select
                                     v-model="anyja"
@@ -62,7 +62,7 @@
 
                             </v-flex>
 
-                            <v-flex md4 v-if="kije === 2">
+                            <v-flex md4 v-if="kije === 3">
 
                                 <v-select
                                     v-model="apja"
@@ -75,7 +75,7 @@
                             </v-flex>
 
 
-                            <v-flex md4 v-if="kije === 1 || kije === 3">
+                            <v-flex md4 v-if="kije === 1 || kije === 4">
 
                                 <v-select
                                     v-model="felesege"
@@ -135,6 +135,14 @@
 
                             <v-btn text @click="saveToGraphViz()"> Exportálás gráfként </v-btn>
 
+                            <!--<v-select
+                                v-model="toDelete"
+                                :items="nodes"
+                                item-text="name"
+                                item-value="id"
+                                label="Eltávolítandó"
+                            /> -->
+
                         </v-layout>
 
                     </v-flex>
@@ -172,11 +180,16 @@
 import OrgChart from "@balkangraph/orgchart.js";
 import {relationService} from "@/services/RelationService";
 
+export const SZULO = 1;
+export const GYERMEK = 3;
+export const PARTNER = 4;
+
 export default {
     name: "FamilyTree",
     data() {
         return {
             hidden: true,
+            toDelete: null,
             firstName: null,
             lastName: null,
             felesege: null,
@@ -211,9 +224,9 @@ export default {
     },
     mounted() {
 
-        relationService.getRaltionTypes().then(response => {
+        /*relationService.getRaltionTypes().then(response => {
             console.log(response);
-        })
+        })*/
 
         if(localStorage.getItem('id') && this.$store.getters.user == null) {
             this.$store.commit('setUser', {
@@ -227,10 +240,10 @@ export default {
             });
         }
 
-        relationService.getUserRelations(this.$store.getters.user.id).then(response => {
+        relationService.getUserRelations(this.$store.getters?.user?.id).then(response => {
             console.log(response)
-            if(response.data.length === 0) {
-                this.nodes = [];
+            this.nodes = [];
+            /*if(response.data.length === 0) {
                 this.nodes.push({
                     id: this.$store.getters.user.id,
                     tags: ['blue'],
@@ -242,12 +255,102 @@ export default {
                     birthDay: this.$store.getters.user.birthDay,
                     birthPlace: this.$store.getters.user.birthPlace,
                 });
-            }
+            } else {
+                response.data.forEach(relation => {
+
+                    let firstUserInNodes = false;
+                    let firstUserIndex = 0;
+                    for (firstUserIndex; firstUserIndex < this.nodes.length; firstUserIndex++) {
+                        if(this.nodes[firstUserIndex].id === relation.firstUser.id) {
+                            firstUserInNodes = true;
+                            break;
+                        }
+                    }
+                    if(!firstUserInNodes) {
+                        this.nodes.push(this.nodeFromRelation(relation.firstUser));
+                    }
+                    switch (relation.relationTypeId) {
+                        case 2:
+                        case SZULO: {
+
+                            console.log(relation)
+
+                            let i = 0;
+                            let hozzaadunk = false;
+                            let newPid, tags;
+                            for(i = 0; i < this.nodes.length; i++) {
+                                console.log(this.nodes[i].id, relation.firstUser.id, i);
+                                if(this.nodes[i].id === relation.firstUser.id) {
+
+                                    console.log('A gyermenk', this.nodes[i])
+                                    console.log('', hozzaadunk)
+
+                                    if(!this.nodes[i].pid) {
+                                        this.nodes[i].pid = relation.secondUser.id;
+                                        this.nodes[i].tags = ['blue'];
+                                        hozzaadunk = true;
+
+                                    } else if(!this.nodes[i].ppid) {
+                                        this.nodes[i].ppid = relation.secondUser.id;
+                                        this.nodes[i].tags = ['blue'];
+                                        hozzaadunk = true;
+                                        newPid = this.nodes[i].pid;
+                                        tags = ['partner'];
+                                    }
+
+                                    console.log('HOZZÁADUNK', hozzaadunk)
+
+                                    break;
+                                }
+                            }
+                            if (hozzaadunk) {
+                                this.nodes.push(this.nodeFromRelation(relation.secondUser), newPid, tags);
+                            }
+                            break;
+                        }
+
+                        case PARTNER : {
+                            this.nodes.push(this.nodeFromRelation(
+                                relation.secondUser,
+                                ['partner'],
+                                this.nodes[firstUserIndex].id
+                            ))
+                            break;
+                        }
+
+                        case GYERMEK: {
+                            this.nodes.push(this.nodeFromRelation(
+                                relation.secondUser,
+                                ['blue'],
+                                this.nodes[firstUserIndex].id
+                            ))
+                            break;
+                        }
+                    }
+                })
+                console.log(this.nodes)
+            }*/
+            this.nodes = response.data;
             this.oc(this.$refs.tree, this.nodes)
         })
 
     },
     methods: {
+        nodeFromRelation(relation, tags, pid, ppid) {
+           return {
+               id: relation.id,
+               tags,
+               pid,
+               ppid,
+               name: relation.firstName + ' ' + relation.lastName,
+               birthDayAndPlace: relation.birthDay + ' ' + relation.birthPlace,
+               img: relation.imageUrl,
+               firstName: relation.firstName,
+               lastName: relation.lastName,
+               birthDay: relation.birthDay,
+               birthPlace: relation.birthPlace,
+           }
+        },
         logout() {
             this.$store.commit('logOutUser');
             localStorage.clear();
@@ -265,16 +368,21 @@ export default {
             });
         },
         add() {
+
+            console.log('vat')
             const parentFix = (node) => {
                 let newPid = node.pid;
                 let newPpid = node.ppid;
                 if(newPid && newPpid) {
                     let parentTags = this.nodes.filter(node => {
-                        console.log(node);
                         return node.id === newPid;
                     })[0].tags;
 
-                    if(parentTags.includes('partner') || parentTags.includes('left-partner') || parentTags.includes('right-partner')) {
+                    if(
+                        parentTags.includes('partner')
+                        || parentTags.includes('left-partner')
+                        || parentTags.includes('right-partner')
+                    ) {
                         let tmp = newPid;
                         newPid = newPpid;
                         newPpid = tmp;
@@ -289,18 +397,21 @@ export default {
                     img: node.img,
                 }
             };
+
+            console.trace('itt')
+
             let newNode = null;
-            if(this.kije !== 3) {
+            if(this.kije !== SZULO) {
                 newNode = parentFix({
                     id: this.nextId(),
                     name: this.firstName + ' ' + this.lastName,
-                    pid: this.kije === 1 ? this.felesege : this.apja,
-                    ppid: this.kije === 1 ? null : this.anyja,
-                    tags: this.kije === 1 ? ['partner'] : ['blue'],
+                    pid: this.kije === PARTNER ? this.felesege : this.apja,
+                    ppid: this.kije === PARTNER ? null : this.anyja,
+                    tags: this.kije === PARTNER ? ['partner'] : ['blue'],
                     img: this.imageUrl,
                 });
 
-                if(this.kije === 1) {
+                if(this.kije === PARTNER) {
                     let i = 0;
                     for(i = 0; i < this.nodes.length; i++) {
                         if(this.nodes[i].pid === this.felesege) {
@@ -319,7 +430,9 @@ export default {
                     tags: null,
                     img: this.imageUrl,
                 };
-                //meg kell keresni hogy kinek amit megad
+                //meg kell keresni hogy kinek amit megad            console.trace('itt')
+                console.trace('itt')
+
                 let i = 0;
                 for(i = 0; i < this.nodes.length; i++) {
                     if(this.nodes[i].id === this.felesege) {
@@ -333,14 +446,18 @@ export default {
                 }
             }
 
-            //const relationTypeId = this.kije === 1 ? 1 : 2;
-            //const relationTypeId = 1;
+            const relationTypeId = this.kije;
 
-            //const firstParent = this.nodes.filter(node => node.id === newNode.pid)[0];
+            let firstParent = this.nodes.filter(node => node.id === newNode.pid)[0];
+            if(!firstParent) {
+                firstParent = this.nodes.filter(node => {
+                    return node.id === this.felesege;
+                })[0]
+            }
 
-            /*relationService.setUserRelation({
+            relationService.setUserRelation({
                 id: 0,
-                firstUser: {
+                secondUser: {
                     id: 0,
                     firstName: this.firstName,
                     lastName: this.lastName,
@@ -348,7 +465,7 @@ export default {
                     birthPlace: this.birthPlace,
                     imageUrl: this.imageUrl,
                 },
-                secondUser: {
+                firstUser: {
                     id: firstParent.id,
                     firstName: firstParent.firstName,
                     lastName: firstParent.lastName,
@@ -357,10 +474,12 @@ export default {
                     imageUrl: firstParent.img,
                 },
                 relationTypeId: relationTypeId,
-            });*/
+            }, this.$store.getters.user.id);
 
 
-          /*  if(relationTypeId !== 1) {
+            if(relationTypeId !== PARTNER && relationTypeId !== SZULO) {
+                console.trace('itt')
+
                 const secondParent = this.nodes.filter(node => node.id === newNode.ppid)[0];
                 relationService.setUserRelation({
                     id: 0,
@@ -381,14 +500,17 @@ export default {
                         imageUrl: secondParent.img,
                     },
                     relationTypeId: relationTypeId,
-                });
-            }*/
+                }, this.$store.getters.user.id);
+            }
+            console.trace('itt')
 
             newNode.birthDayAndPlace = this.birthDay + ' ' + this.birthPlace;
             newNode.birthDay = this.birthDay;
             newNode.birthPlace = this.birthPlace;
+            console.trace('itt')
 
             this.nodes.push(newNode)
+            console.trace('itt')
 
             this.oc(this.$refs.tree, this.nodes)
             this.firstName = '';
