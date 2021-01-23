@@ -124,10 +124,10 @@ export default {
     },
     computed: {
         formValid() {
-            return this.password?.length > 5
+            return this.password?.length > 2
                 && this.password === this.passwordAgain
-                && this.firstname?.length > 5
-                && this.lastname?.length > 5
+                && this.firstname?.length > 2
+                && this.lastname?.length > 2
                 && this.birthplace?.length > 2
                 && this.emailValid(this.email)
         }
