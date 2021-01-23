@@ -461,7 +461,7 @@ export default {
                     id: 0,
                     firstName: this.firstName,
                     lastName: this.lastName,
-                    birthDay: this.birthDay,
+                    birthDay: new Date(this.birthDay).toISOString(),
                     birthPlace: this.birthPlace,
                     imageUrl: this.imageUrl,
                 },
@@ -474,7 +474,7 @@ export default {
                     imageUrl: firstParent.img,
                 },
                 relationTypeId: relationTypeId,
-            }, this.$store.getters.user.id);
+            }, this.$store.getters?.user?.id);
 
 
             if(relationTypeId !== PARTNER && relationTypeId !== SZULO) {
@@ -487,7 +487,7 @@ export default {
                         id: newNode.id,
                         firstName: this.firstName,
                         lastName: this.lastName,
-                        birthDay: this.birthDay,
+                        birthDay: new Date(this.birthDay).toISOString(),
                         birthPlace: this.birthPlace,
                         imageUrl: this.imageUrl,
                     },
@@ -500,12 +500,12 @@ export default {
                         imageUrl: secondParent.img,
                     },
                     relationTypeId: relationTypeId,
-                }, this.$store.getters.user.id);
+                }, this.$store.getters?.user?.id);
             }
             console.trace('itt')
 
             newNode.birthDayAndPlace = this.birthDay + ' ' + this.birthPlace;
-            newNode.birthDay = this.birthDay;
+            newNode.birthDay = new Date(this.birthDay).toISOString();
             newNode.birthPlace = this.birthPlace;
             console.trace('itt')
 
