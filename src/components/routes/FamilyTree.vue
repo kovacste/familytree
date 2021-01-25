@@ -79,7 +79,7 @@
 
                                 <v-select
                                     v-model="felesege"
-                                    :items="nodes"
+                                    :items="getNodes()"
                                     item-text="name"
                                     item-value="id"
                                     label="Kinek"
@@ -265,6 +265,13 @@ export default {
 
     },
     methods: {
+        getNodes() {
+           if(this.kije === SZULO) {
+               return this.nodes.filter(ember => !ember.tags?.includes('partner'));
+           } else {
+               return this.nodes;
+           }
+        },
         imageLoaded(e) {
             const image = e.target.files[0];
             this.imageFile = image;
@@ -320,7 +327,7 @@ export default {
                 }
             });
         },
-        add() {
+        async add() {
             const parentFix = (node) => {
                 let newPid = node.pid;
                 let newPpid = node.ppid;
@@ -346,6 +353,8 @@ export default {
                     ppid: newPpid,
                     tags: node.tags,
                     img: node.img,
+                    firstName: node.firstName,
+                    lastName: node.lastName,
                 }
             };
 
@@ -402,7 +411,7 @@ export default {
                 })[0]
             }
 
-            relationService.setUserRelation({
+            let newUser = await relationService.setUserRelation({
                 id: 0,
                 secondUser: {
                     id: 0,
@@ -421,31 +430,37 @@ export default {
                     imageUrl: firstParent.img,
                 },
                 relationTypeId: relationTypeId,
-            }, this.$store.getters?.user?.id);
-
+            }, this.$store.getters?.user?.id)
 
             if(relationTypeId !== PARTNER && relationTypeId !== SZULO) {
-
+                console.log(newUser);
+                let newUserObj = {
+                    id: newUser.data,
+                    firstName: this.firstName,
+                    lastName: this.lastName,
+                    birthDay: new Date(this.birthDay).toISOString(),
+                    birthPlace: this.birthPlace,
+                    imageUrl: this.imageUrl,
+                };
                 const secondParent = this.nodes.filter(node => node.id === newNode.ppid)[0];
-                relationService.setUserRelation({
+                await relationService.setUserRelation({
                     id: 0,
-                    firstUser: {
-                        id: newNode.id,
-                        firstName: this.firstName,
-                        lastName: this.lastName,
-                        birthDay: new Date(this.birthDay).toISOString(),
-                        birthPlace: this.birthPlace,
-                        imageUrl: this.imageUrl,
-                    },
                     secondUser: {
+                        id: newUser.data,
+                        firstName: newUserObj.firstName,
+                        lastName: newUserObj.lastName,
+                        birthDay: new Date(newUserObj.birthDay).toISOString(),
+                        birthPlace: newUserObj.birthPlace,
+                        imageUrl: newUserObj.imageUrl,
+                    },
+                    firstUser: {
                         id: secondParent.id,
                         firstName: secondParent.firstName,
                         lastName: secondParent.lastName,
                         birthDay: secondParent.birthDay,
                         birthPlace: secondParent.birthPlace,
                         imageUrl: secondParent.img,
-                    },
-                    relationTypeId: relationTypeId,
+                    }, relationTypeId: relationTypeId,
                 }, this.$store.getters?.user?.id);
             }
 
@@ -496,9 +511,6 @@ export default {
 
                 if(node.pid) {
                     if(node.tags) {
-                        if(node.tags.includes('blue')) {
-                            graphvizSource += directedEdge(nameByPID(node.pid), node.name);
-                        }
                         if(node.tags.includes('left-partner') || node.tags.includes('right-partner') || node.tags.includes('partner')) {
                             graphvizSource += undirectedEdge(node.name, nameByPID(node.pid));
                             sameRankNodes.push('{rank = same;"' + node.name + '";"'+ nameByPID(node.pid)+'"};\n');
@@ -509,9 +521,6 @@ export default {
                 }
                 if(node.ppid) {
                     if(node.tags) {
-                        if(node.tags.includes('blue')) {
-                            graphvizSource += directedEdge(nameByPPID(node.ppid), node.name);
-                        }
                         if(node.tags.includes('left-partner') || node.tags.includes('right-partner') || node.tags.includes('partner')) {
                             graphvizSource += undirectedEdge(node.name, nameByPPID(node.ppid));
                             sameRankNodes.push('{rank = same;"' + node.name + '";"'+ nameByPPID(node.pid)+'"};\n');
