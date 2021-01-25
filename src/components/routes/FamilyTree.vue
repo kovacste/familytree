@@ -282,7 +282,7 @@ export default {
                     }
                 }
             ).then(response => {
-                    this.imageUrl = 'http://familytree.eastus2.cloudapp.azure.com' + response.data.dbPath;
+                    this.imageUrl = 'http://familytree.eastus2.cloudapp.azure.com/' + response.data.dbPath.replace('\\\\', '/');
                 }
             );
         },
