@@ -3,18 +3,8 @@ import { Service } from "./Service";
 class RelationService extends Service {
 
     getUserRelations(userId) {
-        /*return this.get('api/User/GetUserRelations?', {
+        return this.get('api/User/GetUserRelations?', {
             userId,
-        });*/
-        console.log(userId);
-        return new Promise((resolve) => {
-            resolve({ data: [
-                    { firstName: 'Name', lastName: 'NAMME', birthPlace: 'HELY', birthDay: 'IDO',  id: 1, pid: 0, tags: ["blue"], name: "King George VI", img: "https://cdn.balkan.app/shared/f1.png"},
-                    { firstName: 'Name', lastName: 'NAMME', birthPlace: 'HELY', birthDay: 'IDO',  id: 2, pid: 1, tags: ["partner"], name: "Queen Elizabeth", title: "The Queen Mother", img: "https://cdn.balkan.app/shared/f2.png" },
-                    { firstName: 'Name', lastName: 'NAMME', birthPlace: 'HELY', birthDay: 'IDO',  id: 3, pid: 1, tags: ["blue"],  ppid: 2, name: "Queen Elizabeth II", img: "https://cdn.balkan.app/shared/f5.png"},
-                    { firstName: 'Name', lastName: 'NAMME', birthPlace: 'HELY', birthDay: 'IDO',  id: 4, pid: 3, tags: ["left-partner"], name: "Prince Philip", title: "Duke of Edinburgh", img: "https://cdn.balkan.app/shared/f3.png"},
-                ]
-            });
         });
     }
 
@@ -22,7 +12,7 @@ class RelationService extends Service {
         console.log(relation)
         return this.post('api/User/SetUserRelation', {
             id: relation.id,
-            CreationUserId: userId,
+            CreationUserId: parseInt(userId, 10),
             firstUser: {
                 id: parseInt(relation.firstUser.id, 10),
                 firstName: relation.firstUser.firstName,

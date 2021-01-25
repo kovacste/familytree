@@ -85,6 +85,25 @@
                                     prepend-inner-icon="lock" rounded outlined
                                 />
 
+
+                                <v-text-field
+                                    id="password"
+                                    label="Jelszó megerősítése"
+                                    name="password"
+                                    type="password"
+                                    v-model="passwordAgain"
+                                    :rules="[v => !!v || 'Jelszó hossza legalább 5 karakter', v => v === password || 'A két jelszó nem egyezik!']"
+                                    prepend-inner-icon="lock" rounded outlined
+                                />
+
+                                <v-text-field
+                                    id="imageurl"
+                                    label="Profilkép"
+                                    name="imageurl"
+                                    v-model="imageUrl"
+                                    rounded outlined
+                                />
+
                             <div class="text-center pa-5 ma-5">
 
                                 <v-btn x-large outlined rounded :disabled="!formValid" @click="register()" color="primary">Regisztráció  </v-btn>
@@ -120,6 +139,7 @@ export default {
             password: null,
             email: null,
             passwordAgain: null,
+            imageUrl: null,
         }
     },
     computed: {
@@ -144,9 +164,9 @@ export default {
                     password: this.password,
                     firstName: this.firstname,
                     lastName: this.lastname,
-                    birthDay: this.birthday,
+                    birthDay: new Date(this.birthday).toISOString(),
                     birthPlace: this.birthplace,
-                    imageUrl: 'https://avatarfiles.alphacoders.com/106/106923.jpg',
+                    imageUrl: this.imageUrl,
                 }
             ).then(() => {
                 this.$router.push('/login')

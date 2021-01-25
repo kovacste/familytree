@@ -13,7 +13,7 @@ Vue.use(Toasted);
 Vue.use(VueRouter);
 const router = new VueRouter({ routes, mode: 'history' });
 
-/*router.beforeEach((to, from, next) => {
+router.beforeEach((to, from, next) => {
   const loggedIn = store.getters.user !== null || localStorage.getItem('email');
 
   if(loggedIn && (to.name === 'login' || to.name === 'registration')) {
@@ -25,7 +25,7 @@ const router = new VueRouter({ routes, mode: 'history' });
     next();
   }
 
-});*/
+});
 
 Vue.config.productionTip = false
 

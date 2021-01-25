@@ -4,7 +4,7 @@
 
         <div id="tree" ref="tree"></div>
 
-        <v-layout id="menu"  style="background: #f8f8f8">
+        <v-layout id="menu"  style="background: #d7d6d6">
 
             <v-flex md12>
 
@@ -256,93 +256,6 @@ export default {
         relationService.getUserRelations(this.$store.getters?.user?.id).then(response => {
             console.log(response)
             this.nodes = [];
-            /*if(response.data.length === 0) {
-                this.nodes.push({
-                    id: this.$store.getters.user.id,
-                    tags: ['blue'],
-                    name: this.$store.getters.user.firstName + ' ' + this.$store.getters.user.lastName,
-                    birthDayAndPlace: this.$store.getters.user.birthDay + ' ' + this.$store.getters.user.birthPlace,
-                    img: this.$store.getters.user.imageUrl,
-                    firstName: this.$store.getters.user.firstName,
-                    lastName: this.$store.getters.user.lastName,
-                    birthDay: this.$store.getters.user.birthDay,
-                    birthPlace: this.$store.getters.user.birthPlace,
-                });
-            } else {
-                response.data.forEach(relation => {
-
-                    let firstUserInNodes = false;
-                    let firstUserIndex = 0;
-                    for (firstUserIndex; firstUserIndex < this.nodes.length; firstUserIndex++) {
-                        if(this.nodes[firstUserIndex].id === relation.firstUser.id) {
-                            firstUserInNodes = true;
-                            break;
-                        }
-                    }
-                    if(!firstUserInNodes) {
-                        this.nodes.push(this.nodeFromRelation(relation.firstUser));
-                    }
-                    switch (relation.relationTypeId) {
-                        case 2:
-                        case SZULO: {
-
-                            console.log(relation)
-
-                            let i = 0;
-                            let hozzaadunk = false;
-                            let newPid, tags;
-                            for(i = 0; i < this.nodes.length; i++) {
-                                console.log(this.nodes[i].id, relation.firstUser.id, i);
-                                if(this.nodes[i].id === relation.firstUser.id) {
-
-                                    console.log('A gyermenk', this.nodes[i])
-                                    console.log('', hozzaadunk)
-
-                                    if(!this.nodes[i].pid) {
-                                        this.nodes[i].pid = relation.secondUser.id;
-                                        this.nodes[i].tags = ['blue'];
-                                        hozzaadunk = true;
-
-                                    } else if(!this.nodes[i].ppid) {
-                                        this.nodes[i].ppid = relation.secondUser.id;
-                                        this.nodes[i].tags = ['blue'];
-                                        hozzaadunk = true;
-                                        newPid = this.nodes[i].pid;
-                                        tags = ['partner'];
-                                    }
-
-                                    console.log('HOZZÁADUNK', hozzaadunk)
-
-                                    break;
-                                }
-                            }
-                            if (hozzaadunk) {
-                                this.nodes.push(this.nodeFromRelation(relation.secondUser), newPid, tags);
-                            }
-                            break;
-                        }
-
-                        case PARTNER : {
-                            this.nodes.push(this.nodeFromRelation(
-                                relation.secondUser,
-                                ['partner'],
-                                this.nodes[firstUserIndex].id
-                            ))
-                            break;
-                        }
-
-                        case GYERMEK: {
-                            this.nodes.push(this.nodeFromRelation(
-                                relation.secondUser,
-                                ['blue'],
-                                this.nodes[firstUserIndex].id
-                            ))
-                            break;
-                        }
-                    }
-                })
-                console.log(this.nodes)
-            }*/
             this.nodes = response.data;
             this.oc(this.$refs.tree, this.nodes)
         })
@@ -362,15 +275,14 @@ export default {
             let formData = new FormData();
             formData.append('file', this.imageFile);
 
-            axios.post(
-                '/uploadService',
+            axios.post('/api/api/User/Upload',
                 formData, {
                     headers: {
                         'Content-Type': this.imageFile
                     }
                 }
             ).then(response => {
-                    console.log(response);
+                    this.imageUrl = 'http://familytree.eastus2.cloudapp.azure.com' + response.data.dbPath;
                 }
             );
         },
@@ -406,8 +318,6 @@ export default {
             });
         },
         add() {
-
-            console.log('vat')
             const parentFix = (node) => {
                 let newPid = node.pid;
                 let newPpid = node.ppid;
@@ -416,10 +326,10 @@ export default {
                         return node.id === newPid;
                     })[0].tags;
 
-                    if(
-                        parentTags.includes('partner')
+                    if(parentTags
+                        && (parentTags.includes('partner')
                         || parentTags.includes('left-partner')
-                        || parentTags.includes('right-partner')
+                        || parentTags.includes('right-partner'))
                     ) {
                         let tmp = newPid;
                         newPid = newPpid;
@@ -435,8 +345,6 @@ export default {
                     img: node.img,
                 }
             };
-
-            console.trace('itt')
 
             let newNode = null;
             if(this.kije !== SZULO) {
@@ -671,10 +579,10 @@ export default {
     height: 60vh;
 }
 #add-form {
-    background: #f8f8f8;
+    background: #d7d6d6;
 }
 #settings-form {
-    background: #f8f8f8;
+    background: #d7d6d6;
     height: 100%;
 }
 .hidden {
