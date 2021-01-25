@@ -39,8 +39,8 @@
                                 <v-select
                                     v-model="kije"
                                     :items="[
-                                      {id: 4, name: 'Párja'},
-                                      {id: 3, name: 'Gyereke'},
+                                      {id: 3, name: 'Párja'},
+                                      {id: 2, name: 'Gyereke'},
                                       {id: 1, name: 'Szülője'},
                                     ]"
                                     label="Kije"
@@ -50,7 +50,7 @@
 
                             </v-flex>
 
-                            <v-flex md4 v-if="kije === 3">
+                            <v-flex md4 v-if="kije === 2">
 
                                 <v-select
                                     v-model="anyja"
@@ -62,7 +62,7 @@
 
                             </v-flex>
 
-                            <v-flex md4 v-if="kije === 3">
+                            <v-flex md4 v-if="kije === 2">
 
                                 <v-select
                                     v-model="apja"
@@ -75,7 +75,7 @@
                             </v-flex>
 
 
-                            <v-flex md4 v-if="kije === 1 || kije === 4">
+                            <v-flex md4 v-if="kije === 1 || kije === 3">
 
                                 <v-select
                                     v-model="felesege"
@@ -192,8 +192,8 @@ import {relationService} from "@/services/RelationService";
 import axios from 'axios';
 
 export const SZULO = 1;
-export const GYERMEK = 3;
-export const PARTNER = 4;
+export const GYERMEK = 2;
+export const PARTNER = 3;
 
 export default {
     name: "FamilyTree",
@@ -376,8 +376,6 @@ export default {
                     tags: null,
                     img: this.imageUrl,
                 };
-                //meg kell keresni hogy kinek amit megad            console.trace('itt')
-                console.trace('itt')
 
                 let i = 0;
                 for(i = 0; i < this.nodes.length; i++) {
@@ -424,7 +422,6 @@ export default {
 
 
             if(relationTypeId !== PARTNER && relationTypeId !== SZULO) {
-                console.trace('itt')
 
                 const secondParent = this.nodes.filter(node => node.id === newNode.ppid)[0];
                 relationService.setUserRelation({
@@ -448,15 +445,12 @@ export default {
                     relationTypeId: relationTypeId,
                 }, this.$store.getters?.user?.id);
             }
-            console.trace('itt')
 
             newNode.birthDayAndPlace = this.birthDay + ' ' + this.birthPlace;
             newNode.birthDay = new Date(this.birthDay).toISOString();
             newNode.birthPlace = this.birthPlace;
-            console.trace('itt')
 
             this.nodes.push(newNode)
-            console.trace('itt')
 
             this.oc(this.$refs.tree, this.nodes)
             this.firstName = '';

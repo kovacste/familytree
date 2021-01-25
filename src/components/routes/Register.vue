@@ -87,16 +87,6 @@
 
 
                                 <v-text-field
-                                    id="password"
-                                    label="Jelszó megerősítése"
-                                    name="password"
-                                    type="password"
-                                    v-model="passwordAgain"
-                                    :rules="[v => !!v || 'Jelszó hossza legalább 5 karakter', v => v === password || 'A két jelszó nem egyezik!']"
-                                    prepend-inner-icon="lock" rounded outlined
-                                />
-
-                                <v-text-field
                                     id="imageurl"
                                     label="Profilkép"
                                     name="imageurl"
