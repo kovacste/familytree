@@ -257,6 +257,9 @@ export default {
             console.log(response)
             this.nodes = [];
             this.nodes = response.data;
+            for(let i = 0; i < this.nodes.length; i++) {
+                this.nodes[i].birthDayAndPlace = this.nodes[i].birthDay.substr(0, 10).replaceAll('-','.') + ' ' + this.nodes[i].birthPlace;
+            }
             this.oc(this.$refs.tree, this.nodes)
         })
 
